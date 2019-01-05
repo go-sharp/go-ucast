@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+
 	// Just to ensure package is offline available
 	_ "github.com/vivint/infectious"
 )
@@ -82,7 +83,7 @@ func (u ucastHelloMessage) toNetByteOrder() ([]byte, error) {
 
 func (u *ucastHelloMessage) fromNetByteOrder(data []byte) error {
 	if len(data) < 11 {
-		return errors.New("message size is too small hello message is at least 10 bytes long")
+		return errors.New("message size is too small hello message is at least 11 bytes long")
 	}
 
 	if msgType(data[0]) != msgHello {
