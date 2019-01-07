@@ -154,6 +154,67 @@ func Test_ucastHelloMessage_fromNetByteOrder(t *testing.T) {
 				name:          "hello",
 			},
 		},
+		{
+			name: "Deserialize a non fec hello message",
+			args: args{
+				[]byte{0x1, 0xff, 0xfe, 0xac, 0xca, 0, 0, 0, 0, 0xff, 0xfe, 'h', 'e', 'l', 'l', 'o'},
+			},
+			wantErr: false,
+			wantMsg: ucastHelloMessage{
+				ucastMessage: ucastMessage{msgID: 0xfffeacca},
+				isFecMsg:     false,
+				stripeSize:   0xfffe,
+				name:         "hello",
+			},
+		},
+		{
+			name: "Deserialize an invalid hello message",
+			args: args{
+				[]byte{0x1, 0xff, 0xfe, 0xac, 0xca, 0, 0, 0, 0, 0xff},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Deserialize a non fec hello message",
+			args: args{
+				[]byte{0x1, 0xff, 0xfe, 0xac, 0xca, 0, 0, 0, 0, 0xff, 0xfe, 'h', 'e', 'l', 'l', 'o'},
+			},
+			wantErr: false,
+			wantMsg: ucastHelloMessage{
+				ucastMessage: ucastMessage{msgID: 0xfffeacca},
+				isFecMsg:     false,
+				stripeSize:   0xfffe,
+				name:         "hello",
+			},
+		},
+		{
+			name: "Deserialize a hello message with empty name",
+			args: args{
+				[]byte{0x1, 0xff, 0xfe, 0xac, 0xca, 0, 0, 0, 0, 0xff, 0xfe},
+			},
+			wantErr: false,
+			wantMsg: ucastHelloMessage{
+				ucastMessage: ucastMessage{msgID: 0xfffeacca},
+				isFecMsg:     false,
+				stripeSize:   0xfffe,
+				name:         "",
+			},
+		},
+		{
+			name: "Deserialize a hello message with an UTF-8 multi byte name",
+			args: args{
+				[]byte{0x1, 0xff, 0xfe, 0xac, 0xca, 0, 0, 0, 0, 0xff, 0xfe,
+					117, 116, 102, 195, 164, 195, 182,
+					195, 188, 64, 124, 194, 162},
+			},
+			wantErr: false,
+			wantMsg: ucastHelloMessage{
+				ucastMessage: ucastMessage{msgID: 0xfffeacca},
+				isFecMsg:     false,
+				stripeSize:   0xfffe,
+				name:         "utfäöü@|¢",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
