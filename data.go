@@ -1,4 +1,4 @@
-package ucast
+package goucast
 
 import (
 	"bytes"
@@ -10,28 +10,35 @@ import (
 )
 
 const (
-	isFecFlag = 1 << 7
+	fecFlag = 1 << 7
 )
 
-type serializer interface {
+type beSerializer interface {
 	toNetByteOrder() ([]byte, error)
 }
 
-type deserializer interface {
+type beDeserializer interface {
 	fromNetByteOrder(data []byte) error
+}
+
+type nboDeSerializer interface {
+	beDeserializer
+	beSerializer
 }
 
 type msgType int8
 
 const (
-	msgHello msgType = iota + 1
-	msgData
-	msgFecData
+	msgTypeHello msgType = iota + 1
+	msgTypeData
+	msgTypeFecData
 )
 
 type ucastMessage struct {
 	msgID uint32
 }
+
+var _ nboDeSerializer = &ucastHelloMessage{}
 
 type ucastHelloMessage struct {
 	ucastMessage
@@ -52,7 +59,7 @@ func (u ucastHelloMessage) toNetByteOrder() ([]byte, error) {
 	var buf = bytes.NewBuffer(make([]byte, 0, 523))
 
 	// First always serialize type information
-	buf.WriteByte(byte(msgHello))
+	buf.WriteByte(byte(msgTypeHello))
 
 	if err := binary.Write(buf, binary.BigEndian, u.msgID); err != nil {
 		return nil, err
@@ -61,7 +68,7 @@ func (u ucastHelloMessage) toNetByteOrder() ([]byte, error) {
 	// Write flags
 	var flags uint8
 	if u.isFecMsg {
-		flags |= isFecFlag
+		flags |= fecFlag
 	}
 	buf.WriteByte(byte(flags))
 
@@ -86,12 +93,12 @@ func (u *ucastHelloMessage) fromNetByteOrder(data []byte) error {
 		return errors.New("message size is too small hello message is at least 11 bytes long")
 	}
 
-	if msgType(data[0]) != msgHello {
+	if msgType(data[0]) != msgTypeHello {
 		return errors.New("data is not a hello message")
 	}
 
 	u.msgID = binary.BigEndian.Uint32(data[1:5])
-	u.isFecMsg = data[5]&isFecFlag == isFecFlag
+	u.isFecMsg = data[5]&fecFlag == fecFlag
 	u.fecRequired = data[6]
 	u.fecPieces = data[7]
 	u.fecInterleave = data[8]

@@ -1,4 +1,4 @@
-package ucast
+package goucast
 
 import (
 	"reflect"
@@ -141,7 +141,7 @@ func Test_ucastHelloMessage_fromNetByteOrder(t *testing.T) {
 		{
 			name: "Deserialize a fec hello message",
 			args: args{
-				[]byte{0x1, 0xff, 0xfe, 0xac, 0xca, isFecFlag, 0x14, 0x10, 0xab, 0xff, 0xfe, 'h', 'e', 'l', 'l', 'o'},
+				[]byte{0x1, 0xff, 0xfe, 0xac, 0xca, fecFlag, 0x14, 0x10, 0xab, 0xff, 0xfe, 'h', 'e', 'l', 'l', 'o'},
 			},
 			wantErr: false,
 			wantMsg: ucastHelloMessage{
