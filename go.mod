@@ -5,4 +5,5 @@ require (
 	github.com/vivint/infectious v0.0.0-20180906161625-e155e6eb3575
 	golang.org/x/net v0.0.0-20181220203305-927f97764cc3 // indirect
 	golang.org/x/sys v0.0.0-20181221143128-b4a75ba826a6 // indirect
+	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 )

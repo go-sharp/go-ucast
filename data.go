@@ -4,27 +4,16 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 
 	// Just to ensure package is offline available
 	_ "github.com/vivint/infectious"
 )
 
 const (
-	fecFlag = 1 << 7
+	fecFlag     = 1 << 7
+	lastPkgFlag = 1 << 7
 )
-
-type beSerializer interface {
-	toNetByteOrder() ([]byte, error)
-}
-
-type beDeserializer interface {
-	fromNetByteOrder(data []byte) error
-}
-
-type nboDeSerializer interface {
-	beDeserializer
-	beSerializer
-}
 
 type msgType int8
 
@@ -38,8 +27,6 @@ type ucastMessage struct {
 	msgID uint32
 }
 
-var _ nboDeSerializer = &ucastHelloMessage{}
-
 type ucastHelloMessage struct {
 	ucastMessage
 	isFecMsg      bool
@@ -50,7 +37,7 @@ type ucastHelloMessage struct {
 	name          string
 }
 
-func (u ucastHelloMessage) toNetByteOrder() ([]byte, error) {
+func (u ucastHelloMessage) toBytes() ([]byte, error) {
 	if len(u.name) > 512 {
 		return nil, errors.New("maximum length of name is 512 bytes")
 	}
@@ -88,9 +75,9 @@ func (u ucastHelloMessage) toNetByteOrder() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (u *ucastHelloMessage) fromNetByteOrder(data []byte) error {
+func (u *ucastHelloMessage) fromBytes(data []byte) error {
 	if len(data) < 11 {
-		return errors.New("message size is too small hello message is at least 11 bytes long")
+		return errors.New("message size is too small, hello message is at least 11 bytes long")
 	}
 
 	if msgType(data[0]) != msgTypeHello {
@@ -105,6 +92,83 @@ func (u *ucastHelloMessage) fromNetByteOrder(data []byte) error {
 	u.stripeSize = binary.BigEndian.Uint16(data[9:11])
 	if len(data) > 11 {
 		u.name = string(data[11:len(data)])
+	}
+
+	return nil
+}
+
+type ucastDataMessage struct {
+	ucastMessage
+	typ          msgType
+	isLastPacket bool
+	stripeNr     uint32
+	pieceNr      uint8
+	data         []byte
+}
+
+func (u ucastDataMessage) toBytes() ([]byte, error) {
+	maxData := 1462
+	if u.typ == msgTypeFecData {
+		maxData = 1461
+	}
+	// Max length max udp size - ucastDataMessage header size
+	if len(u.data) > maxData {
+		return nil, fmt.Errorf("maximum length of data is %v bytes", maxData)
+	}
+
+	var buf = bytes.NewBuffer(make([]byte, 0, 1472))
+	// Writing message type
+	buf.WriteByte(byte(u.typ))
+	// Write message id
+	if err := binary.Write(buf, binary.BigEndian, u.msgID); err != nil {
+		return nil, err
+	}
+
+	// Write flags
+	var flags uint8
+	if u.isLastPacket {
+		flags |= lastPkgFlag
+	}
+	buf.WriteByte(flags)
+
+	// Write stripe number
+	if err := binary.Write(buf, binary.BigEndian, u.stripeNr); err != nil {
+		return nil, err
+	}
+
+	// If fec data message write pieceNr
+	if u.typ == msgTypeFecData {
+		buf.WriteByte(u.pieceNr)
+	}
+
+	// Write data
+	buf.Write(u.data)
+	return buf.Bytes(), nil
+}
+
+func (u *ucastDataMessage) fromBytes(data []byte) error {
+	if len(data) < 10 {
+		return errors.New("message size is too small, data message is at least 10 bytes long")
+	}
+
+	typ := msgType(data[0])
+	if typ != msgTypeData && typ != msgTypeFecData {
+		return errors.New("data is neither a data nor a fec data message")
+	}
+
+	if typ == msgTypeFecData && len(data) < 11 {
+		return errors.New("message size is too small, fec data message is at least 11 bytes long")
+	}
+
+	u.msgID = binary.BigEndian.Uint32(data[1:5])
+	u.isLastPacket = data[5]&lastPkgFlag == lastPkgFlag
+	u.stripeNr = binary.BigEndian.Uint32(data[5:9])
+
+	if typ == msgTypeFecData {
+		u.pieceNr = data[9]
+		u.data = data[10:]
+	} else {
+		u.data = data[9:]
 	}
 
 	return nil

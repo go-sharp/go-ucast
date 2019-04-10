@@ -7,7 +7,7 @@ import (
 	_ "github.com/vivint/infectious"
 )
 
-func Test_ucastHelloMessage_toNetByteOrder(t *testing.T) {
+func Test_ucastHelloMessage_toBytes(t *testing.T) {
 	type fields struct {
 		ucastMessage  ucastMessage
 		isFecMsg      bool
@@ -116,19 +116,19 @@ func Test_ucastHelloMessage_toNetByteOrder(t *testing.T) {
 				stripeSize:    tt.fields.stripeSize,
 				name:          tt.fields.name,
 			}
-			got, err := u.toNetByteOrder()
+			got, err := u.toBytes()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ucastHelloMessage.toNetByteOrder() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ucastHelloMessage.toBytes() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) && !tt.wantErr {
-				t.Errorf("ucastHelloMessage.toNetByteOrder() = %v, want %v", got, tt.want)
+				t.Errorf("ucastHelloMessage.toBytes() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_ucastHelloMessage_fromNetByteOrder(t *testing.T) {
+func Test_ucastHelloMessage_fromBytes(t *testing.T) {
 	type args struct {
 		data []byte
 	}
@@ -220,7 +220,7 @@ func Test_ucastHelloMessage_fromNetByteOrder(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			u := ucastHelloMessage{}
 
-			if err := u.fromNetByteOrder(tt.args.data); (err != nil) != tt.wantErr {
+			if err := u.fromBytes(tt.args.data); (err != nil) != tt.wantErr {
 				t.Fatalf("ucastHelloMessage.fromNetByteOrder() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
