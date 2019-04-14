@@ -15,36 +15,44 @@ func TestHeaderSerialisation(t *testing.T) {
 		{
 			name: "Header message",
 			header: messageHeader{
-				msgID:   0x112233aabbcc,
-				msgType: 0xae,
-				flags:   0,
+				message: message{
+					msgID:   0x112233aabbcc,
+					msgType: 0xae,
+					flags:   0,
+				},
 				stripeL: 0xff11,
 				fecTot:  0xa9,
 				fecRec:  0xb2,
 				fecInt:  0xc4,
 			},
 			want: messageHeader{
-				msgID:   0x112233aabbcc,
-				msgType: 0xae,
-				flags:   0,
+				message: message{
+					msgID:   0x112233aabbcc,
+					msgType: 0xae,
+					flags:   0,
+				},
 				stripeL: 0xff11,
 			},
 		},
 		{
 			name: "Fec header message",
 			header: messageHeader{
-				msgID:   0x112233aabbcc,
-				msgType: 0xae,
-				flags:   fecMsg | 0xfe11,
+				message: message{
+					msgID:   0x112233aabbcc,
+					msgType: 0xae,
+					flags:   fecMsg | 0xfe11,
+				},
 				stripeL: 0xff11,
 				fecTot:  0xa9,
 				fecRec:  0xb2,
 				fecInt:  0xc4,
 			},
 			want: messageHeader{
-				msgID:   0x112233aabbcc,
-				msgType: 0xae,
-				flags:   fecMsg | 0xfe11,
+				message: message{
+					msgID:   0x112233aabbcc,
+					msgType: 0xae,
+					flags:   fecMsg | 0xfe11,
+				},
 				stripeL: 0xff11,
 				fecTot:  0xa9,
 				fecRec:  0xb2,
