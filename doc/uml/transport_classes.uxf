@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.3.0">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>0</x>
+      <y>90</y>
+      <w>280</w>
+      <h>250</h>
+    </coordinates>
+    <panel_attributes>transport::Sender
+--
+- nextID: uint64
+- conn: net.UDPConn
+- lim: rate.Limiter
+- fecTot: uint8
+- fecRec: uint8
+- fecInt: uint8
+- stripeL: uint16
+- logger: logrus.Logger 
+--
++ Send(t: int, r: io.Reader): error
+- processFecMsg(r: io.Reader): error
+- processMsg(r: io.Reader): error</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>470</x>
+      <y>0</y>
+      <w>230</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>transport::messageHeader
+--
+- msgID: uint64
+- msgType: uint8
+- flags: int16
+- stripeL: uint16
+- fecTot: uint8
+- fecRec: uint8
+- fecInt: uint8
+--
+- toBytes(b: []byte): (int, error)
+- fromBytes(b: []byte): error</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>270</x>
+      <y>90</y>
+      <w>220</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;use&gt;&gt;</panel_attributes>
+    <additional_attributes>200.0;10.0;10.0;60.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>470</x>
+      <y>240</y>
+      <w>230</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>transport::message
+--
+- msgID: uint64
+- stripeNr: uint64
+- flags: uint16
+- fecPad: uint16
+- fecNr: uint8
+- data: []byte
+--
+- toBytes(b: []byte): (int, error)
+- fromBytes(b: []byte): error</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>270</x>
+      <y>240</y>
+      <w>220</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;use&gt;&gt;</panel_attributes>
+    <additional_attributes>200.0;40.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>860</x>
+      <y>100</y>
+      <w>370</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>transport::Receiver
+--
+- conn: net.UDPConn
+- logger: logrus.Logger
+- handler: func(t: int, r: io.ReadCloser)
+- dispatcherCh: []byte
+- messages: map[uint64]chan &lt;- message 
+--
++ SetOnReceive(f: func(t: int, r: io.ReadCloser)): void
++ StopReceiver(): error
++ Listen(): error
+- dispatch(): void
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>910</x>
+      <y>480</y>
+      <w>270</w>
+      <h>210</h>
+    </coordinates>
+    <panel_attributes>transport::composer
+--
+- msgID: uint64
+- lastStrNr: uint64
+- recvCh: &lt;- chan message
+- doneFn: func(id: uint64)
+- buf: []byte
+- msgBuf: map[uint64]message
+--
++ Read(p: []byte): (int, error)
++ Close(): error
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>910</x>
+      <y>740</y>
+      <w>270</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>transport::fecComposer
+--
+- fecTot: uint8
+- fecRec: uint8
+- fecInt: uint8</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1030</x>
+      <y>680</y>
+      <w>30</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1030</x>
+      <y>310</y>
+      <w>70</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;use&gt;&gt;</panel_attributes>
+    <additional_attributes>10.0;170.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>690</x>
+      <y>260</y>
+      <w>190</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;use&gt;&gt;</panel_attributes>
+    <additional_attributes>10.0;70.0;170.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>690</x>
+      <y>100</y>
+      <w>190</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;use&gt;&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;170.0;80.0</additional_attributes>
+  </element>
+</diagram>
