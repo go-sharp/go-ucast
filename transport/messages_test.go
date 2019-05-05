@@ -40,7 +40,7 @@ func TestHeaderSerialisation(t *testing.T) {
 				message: message{
 					msgID:   0x112233aabbcc,
 					msgType: 0xae,
-					flags:   fecMsg | 0xfe11,
+					flags:   fecMsgFlag | 0xfe11,
 				},
 				stripeL: 0xff11,
 				fecTot:  0xa9,
@@ -51,7 +51,7 @@ func TestHeaderSerialisation(t *testing.T) {
 				message: message{
 					msgID:   0x112233aabbcc,
 					msgType: 0xae,
-					flags:   fecMsg | 0xfe11,
+					flags:   fecMsgFlag | 0xfe11,
 				},
 				stripeL: 0xff11,
 				fecTot:  0xa9,
@@ -72,6 +72,78 @@ func TestHeaderSerialisation(t *testing.T) {
 			// assert
 			if !reflect.DeepEqual(tc.want, result) {
 				t.Errorf("messageHeader serialisation: got = %v, want %v", result, tc.want)
+			}
+		})
+	}
+}
+
+func TestDataSerialisation(t *testing.T) {
+	testCases := []struct {
+		name   string
+		header messageData
+		want   messageData
+	}{
+		{
+			name: "Data message",
+			header: messageData{
+				message: message{
+					msgID:   0x112233aabbcc,
+					msgType: 0xae,
+					flags:   0,
+				},
+				data:     []byte{123, 222, 23, 56, 11},
+				stripeNr: 0xa9,
+				fecPad:   0xb2,
+				fecNr:    0xc4,
+			},
+			want: messageData{
+				message: message{
+					msgID:   0x112233aabbcc,
+					msgType: 0xae,
+					flags:   0,
+				},
+				data:     []byte{123, 222, 23, 56, 11},
+				stripeNr: 0xa9,
+			},
+		},
+		{
+			name: "Fec data message",
+			header: messageData{
+				message: message{
+					msgID:   0x112233aabbcc,
+					msgType: 0xae,
+					flags:   fecMsgFlag | 0xfe11,
+				},
+				data:     []byte{123, 222, 23, 56, 11},
+				stripeNr: 0xa9,
+				fecPad:   0xb2,
+				fecNr:    0xc4,
+			},
+			want: messageData{
+				message: message{
+					msgID:   0x112233aabbcc,
+					msgType: 0xae,
+					flags:   fecMsgFlag | 0xfe11,
+				},
+				data:     []byte{123, 222, 23, 56, 11},
+				stripeNr: 0xa9,
+				fecPad:   0xb2,
+				fecNr:    0xc4,
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			var result messageData
+			// act
+			tc.header.toBytes(&buf)
+			result.fromBytes(buf.Bytes())
+
+			// assert
+			if !reflect.DeepEqual(tc.want, result) {
+				t.Errorf("messageData serialisation: got = %v, want %v", result, tc.want)
 			}
 		})
 	}
